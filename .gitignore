@@ -26,3 +26,4 @@ dist-ssr
 # Extras
 build_error.log
 vercel.json
+.env

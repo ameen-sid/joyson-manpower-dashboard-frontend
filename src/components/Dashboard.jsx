@@ -147,7 +147,7 @@ const Dashboard = () => {
 
                             return (
                                 <>
-                                    <div className="flex-1 max-w-[100px] flex flex-col items-center group">
+                                    <div className="flex-1 max-w-25 flex flex-col items-center group">
                                         <div className="mb-2 text-center">
                                             <span className="block text-lg font-bold text-slate-800">{reqVal}</span>
                                             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Required</span>
@@ -160,7 +160,7 @@ const Dashboard = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex-1 max-w-[100px] flex flex-col items-center group">
+                                    <div className="flex-1 max-w-25 flex flex-col items-center group">
                                         <div className="mb-2 text-center">
                                             <span className="block text-lg font-bold text-slate-800">{actVal}</span>
                                             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Actual</span>
@@ -173,7 +173,7 @@ const Dashboard = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex-1 max-w-[100px] flex flex-col items-center group">
+                                    <div className="flex-1 max-w-25 flex flex-col items-center group">
                                         <div className="mb-2 text-center">
                                             <span className={`block text-lg font-bold ${bufVal < 0 ? 'text-red-500' : 'text-slate-800'}`}>{bufVal}</span>
                                             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Buffer</span>

@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
             try {
                 const response = await api.get('/auth/check');
                 setUser(response.data.user);
+            // eslint-disable-next-line no-unused-vars
             } catch (error) {
                 setUser(null);
             } finally {

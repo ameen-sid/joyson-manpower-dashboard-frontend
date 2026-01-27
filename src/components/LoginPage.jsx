@@ -19,6 +19,7 @@ const LoginPage = () => {
         try {
             await login(username, password);
             navigate('/dashboard');
+        // eslint-disable-next-line no-unused-vars
         } catch (err) {
             setError('Invalid username or password');
         } finally {

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { LogOut, Activity, Bell, ChevronDown } from 'lucide-react';
 import { FilterProvider, useFilters } from '../context/FilterContext';
 
 const SelectInput = ({ value, onChange, options, placeholder }) => (
-    <div className="relative min-w-[200px]">
+    <div className="relative min-w-50">
         <select
             value={value}
             onChange={onChange}
@@ -35,7 +35,7 @@ const LayoutContent = () => {
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col relative overflow-hidden">
             {/* Background Atmosphere (Subtle ties to Login Page) */}
-            <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none z-0"></div>
+            <div className="absolute top-0 left-0 w-full h-96 bg-linear-to-b from-blue-50/50 to-transparent pointer-events-none z-0"></div>
 
             {/* Top Header */}
             <header className="h-20 bg-slate-900 shadow-xl z-20 px-4 md:px-8 flex items-center justify-between relative overflow-hidden shrink-0">
@@ -95,7 +95,7 @@ const LayoutContent = () => {
                             <div className="text-white font-semibold">Admin User</div>
                             <div className="text-slate-400 text-xs">Administrator</div>
                         </div>
-                        <div className="h-9 w-9 md:h-10 md:w-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg border-2 border-slate-800">
+                        <div className="h-9 w-9 md:h-10 md:w-10 bg-linear-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg border-2 border-slate-800">
                             A
                         </div>
                     </div>
@@ -131,7 +131,6 @@ const LayoutContent = () => {
                     placeholder="Line"
                 />
             </div>
-
 
             {/* Main Content */}
             <main className="flex-1 overflow-auto p-4 md:p-8 z-10">
