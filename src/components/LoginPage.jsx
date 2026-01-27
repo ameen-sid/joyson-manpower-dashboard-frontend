@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { User, Lock, ArrowRight, Activity } from 'lucide-react';
 
 const LoginPage = () => {
@@ -8,20 +9,21 @@ const LoginPage = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const { login } = useAuth();
 
-    const handleLogin = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
         setIsLoading(true);
-        setTimeout(() => {
-            // Dummy authentication
-            if (username === 'admin123' && password === 'admin123') {
-                localStorage.setItem('isAuthenticated', 'true');
-                navigate('/dashboard');
-            } else {
-                setError('Invalid credentials');
-                setIsLoading(false);
-            }
-        }, 800); // Simulate network delay for effect
+
+        try {
+            await login(username, password);
+            navigate('/dashboard');
+        } catch (err) {
+            setError('Invalid username or password');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -47,7 +49,7 @@ const LoginPage = () => {
                         <span className="text-blue-400">Dashboard</span>
                     </h2>
                     <p className="text-slate-400 text-lg mb-8 leading-relaxed">
-                        Real-time monitoring of manpower, efficiency, and production quality. Streamline your industrial operations with data-driven insights.
+                        Monitoring of manpower availability and skill distribution. Streamline your industrial operations with data-driven insights.
                     </p>
                     <div className="flex items-center space-x-4 text-sm font-medium text-slate-500">
                         <div className="flex items-center">
@@ -78,7 +80,7 @@ const LoginPage = () => {
                         <p className="text-slate-500">Please enter your details to sign in.</p>
                     </div>
 
-                    <form onSubmit={handleLogin} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label className="block text-sm font-semibold text-slate-700 mb-2">Username</label>
                             <div className="relative">
@@ -122,7 +124,7 @@ const LoginPage = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:-translate-y-0.5 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
                             {isLoading ? (
                                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
