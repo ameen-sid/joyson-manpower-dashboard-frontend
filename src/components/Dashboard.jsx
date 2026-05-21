@@ -1,21 +1,41 @@
 import React from 'react';
 import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, Legend
 } from 'recharts';
-import { Users, Filter, ChevronDown, Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Users, Filter, ChevronDown, Activity, ArrowUpRight, ArrowDownRight, Award, UserMinus } from 'lucide-react';
 import api from '../utils/api';
 import { useFilters } from '../context/FilterContext';
+import AttendanceUpload from './AttendanceUpload';
+import SetRequiredManpower from './SetRequiredManpower';
+
+// Helper Component for Empty States
+const NoDataDisplay = ({ message = "No Data Available" }) => (
+    <div className="flex flex-col items-center justify-center h-full text-slate-400">
+        <div className="bg-slate-50 p-4 rounded-full mb-3">
+            <Filter size={24} className="opacity-50" />
+        </div>
+        <p className="text-sm font-medium">{message}</p>
+        <p className="text-xs opacity-70 mt-1">Try adjusting your filters</p>
+    </div>
+);
 
 const Dashboard = () => {
     // Global Filter State
-    const { selectedDept, selectedSection, selectedLine } = useFilters();
+    const { selectedDept, selectedSection, selectedLine, selectedShift, startDate, endDate } = useFilters();
+
+    // UI State
+    const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false);
+    const [isSetRequiredModalOpen, setIsSetRequiredModalOpen] = React.useState(false);
 
     // Dynamic Data State
     const [metrics, setMetrics] = React.useState({
         workforce: 0,
-        manpower: [],
-        attrition: [],
-        skills: []
+        manpowerTrend: [],
+        absenteeismTrend: [],
+        attritionTrend: [],
+        dojoTrend: [],
+        skills: [],
+        dojoCount: 0
     });
 
     // Data Fetching
@@ -25,46 +45,46 @@ const Dashboard = () => {
                 const params = {
                     department: selectedDept,
                     section: selectedSection,
-                    line: selectedLine
+                    line: selectedLine,
+                    shift: selectedShift,
+                    startDate,
+                    endDate
                 };
 
                 // Fetch all data in parallel
-                const [manpowerRes, skillsRes, attritionRes] = await Promise.all([
-                    api.get('/dashboard/manpower', { params }),
-                    api.get('/dashboard/skills', { params }),
-                    api.get('/dashboard/attrition', { params })
+                const [manpowerRes, trendRes, absRes, skillsRes, attritionRes, dojoRes, dojoTrendRes] = await Promise.all([
+                    api.get('/dashboard/stats/manpower', { params }), // Current snapshot
+                    api.get('/dashboard/stats/manpower-trend', { params }), // History
+                    api.get('/dashboard/stats/absenteeism', { params }),
+                    api.get('/dashboard/stats/skill-matrix', { params }),
+                    api.get('/dashboard/stats/attrition', { params }),
+                    api.get('/dashboard/stats/dojo', { params }),
+                    api.get('/dashboard/stats/dojo-trend', { params })
                 ]);
-
-                const manpowerData = manpowerRes.data;
-                const skillsData = skillsRes.data;
-                const attritionData = attritionRes.data;
 
                 // Color mapping helper
                 const getSkillColor = (level) => {
                     switch (level) {
-                        case 'L4': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
-                        case 'L3': return 'text-blue-600 bg-blue-50 border-blue-200';
-                        case 'L2': return 'text-indigo-600 bg-indigo-50 border-indigo-200';
-                        case 'L1': return 'text-purple-600 bg-purple-50 border-purple-200';
-                        default: return 'text-slate-600 bg-slate-50 border-slate-200';
+                        case 'L4': return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+                        case 'L3': return 'border-blue-200 bg-blue-50 text-blue-700';
+                        case 'L2': return 'border-indigo-200 bg-indigo-50 text-indigo-700';
+                        case 'L1': return 'border-purple-200 bg-purple-50 text-purple-700';
+                        default: return 'border-slate-200 bg-slate-50 text-slate-700';
                     }
                 };
 
                 setMetrics({
-                    workforce: manpowerData.actual,
-                    manpower: [
-                        { name: 'Required', value: manpowerData.required, color: 'bg-blue-500' },
-                        { name: 'Actual', value: manpowerData.actual, color: 'bg-emerald-500' },
-                        { name: 'Buffer', value: manpowerData.buffer, color: 'bg-amber-400' },
-                    ],
-                    attrition: attritionData.map(d => ({
-                        date: d.month,
-                        rate: d.rate
-                    })),
-                    skills: skillsData.map(s => ({
+                    workforce: manpowerRes.data.actual,
+                    manpowerTrend: trendRes.data,
+                    absenteeismTrend: absRes.data,
+                    attritionTrend: attritionRes.data,
+                    dojoTrend: dojoTrendRes.data,
+                    dojoCount: dojoRes.data.totalDojo,
+                    skills: skillsRes.data.map(s => ({
                         level: s.skill,
                         avail: s.available,
                         req: s.required,
+                        gap: s.gap,
                         color: getSkillColor(s.skill)
                     }))
                 });
@@ -80,148 +100,185 @@ const Dashboard = () => {
         const interval = setInterval(fetchData, 30000);
         return () => clearInterval(interval);
 
-    }, [selectedDept, selectedSection, selectedLine]);
+    }, [selectedDept, selectedSection, selectedLine, selectedShift, startDate, endDate]);
 
     return (
-        <div className="space-y-6">
-            {/* Header / Intro */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Operational Overview</h2>
-                    <p className="text-slate-500 text-sm">Manpower and efficiency metrics</p>
-                </div>
+        <div className="h-[calc(100vh-170px)] grid grid-rows-2 gap-3 animate-in fade-in duration-500 overflow-hidden relative">
 
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-                {/* 1. Workforce Stats Card */}
-                <div className="bg-white p-6 rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col justify-between col-span-1 lg:col-span-3 relative overflow-hidden group hover:shadow-xl transition-shadow duration-300">
-                    {/* Decorative Blob */}
-                    <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-50 rounded-full group-hover:bg-blue-100 transition-colors duration-300"></div>
+            {/* Top Row: Manpower Trend & Skill Matrix */}
+            <div className="grid grid-cols-3 gap-3 h-full min-h-0">
 
-                    <div>
-                        <div className="flex items-center justify-between mb-6 relative z-10">
-                            <h3 className="text-slate-400 font-bold text-xs uppercase tracking-wider">Total Workforce</h3>
-                            <Activity className="h-4 w-4 text-slate-300" />
-                        </div>
-                        <div className="relative z-10">
-                            <div className="flex items-baseline space-x-2">
-                                <span className="text-5xl font-extrabold text-slate-800">{metrics.workforce}</span>
-                                <span className="text-sm font-medium text-slate-400">employees</span>
-                            </div>
-
+                {/* Manpower Trend Graph (Spans 2 columns) */}
+                <div className="col-span-2 bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden">
+                    <div className="flex justify-between items-center mb-1 shrink-0">
+                        <h3 className="text-sm font-bold text-slate-800">Total Manpower vs Actual vs Buffer</h3>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setIsSetRequiredModalOpen(true)}
+                                className="bg-emerald-50 border border-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors flex items-center gap-1.5"
+                            >
+                                <Users size={14} />
+                                Set Required Manpower
+                            </button>
+                            <button
+                                onClick={() => setIsUploadModalOpen(true)}
+                                className="bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-600 hover:text-white px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors flex items-center gap-1.5"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                Upload Attendance
+                            </button>
                         </div>
                     </div>
-
-                    <div className="mt-8 flex justify-between items-end relative z-10">
-                        <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div>
-                            <span className="text-xs font-semibold text-slate-600">Global Count: {metrics.workforce}</span>
-                        </div>
-                        <div className="h-12 w-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200">
-                            <Users className="h-6 w-6" />
-                        </div>
-                    </div>
-                </div>
-
-                {/* 2. Manpower Availability */}
-                <div className="bg-white p-6 rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 col-span-1 lg:col-span-6 flex flex-col">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-slate-800 font-bold text-base">Manpower Availability</h3>
-
-                    </div>
-
-                    <div className="flex-1 flex justify-around items-end gap-2 px-2">
-                        {/* Custom Bar Visuals */}
-                        {metrics.manpower.length > 0 && (() => {
-                            const reqVal = metrics.manpower[0].value;
-                            const actVal = metrics.manpower[1].value;
-                            const bufVal = metrics.manpower[2].value;
-
-                            // Find max value to normalize heights (at least 1 to avoid division by zero)
-                            const maxVal = Math.max(reqVal, actVal, Math.abs(bufVal), 1);
-
-                            // Calculate percentages (capped at 100%)
-                            const getHeight = (val) => `${Math.min((Math.abs(val) / maxVal) * 100, 100)}%`;
-
-                            return (
-                                <>
-                                    <div className="flex-1 max-w-25 flex flex-col items-center group">
-                                        <div className="mb-2 text-center">
-                                            <span className="block text-lg font-bold text-slate-800">{reqVal}</span>
-                                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Required</span>
-                                        </div>
-                                        <div className="w-full bg-slate-100 rounded-t-lg relative h-64 flex items-end justify-center overflow-hidden">
-                                            <div
-                                                className="w-full bg-blue-500 rounded-t-lg transition-all duration-700 group-hover:bg-blue-600"
-                                                style={{ height: getHeight(reqVal) }}
-                                            ></div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex-1 max-w-25 flex flex-col items-center group">
-                                        <div className="mb-2 text-center">
-                                            <span className="block text-lg font-bold text-slate-800">{actVal}</span>
-                                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Actual</span>
-                                        </div>
-                                        <div className="w-full bg-slate-100 rounded-t-lg relative h-64 flex items-end justify-center overflow-hidden">
-                                            <div
-                                                className="w-full bg-emerald-500 rounded-t-lg transition-all duration-700 group-hover:bg-emerald-600"
-                                                style={{ height: getHeight(actVal) }}
-                                            ></div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex-1 max-w-25 flex flex-col items-center group">
-                                        <div className="mb-2 text-center">
-                                            <span className={`block text-lg font-bold ${bufVal < 0 ? 'text-red-500' : 'text-slate-800'}`}>{bufVal}</span>
-                                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Buffer</span>
-                                        </div>
-                                        <div className="w-full bg-slate-100 rounded-t-lg relative h-64 flex items-end justify-center overflow-hidden">
-                                            <div
-                                                className={`w-full rounded-t-lg transition-all duration-700 ${bufVal < 0 ? 'bg-red-400 group-hover:bg-red-500' : 'bg-amber-400 group-hover:bg-amber-500'}`}
-                                                style={{ height: getHeight(bufVal) }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                </>
-                            );
-                        })()}
+                    <div className="flex-1 min-h-0 w-full">
+                        {metrics.manpowerTrend.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={metrics.manpowerTrend}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                    <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="#94A3B8" />
+                                    <YAxis tick={{ fontSize: 10 }} stroke="#94A3B8" />
+                                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }} />
+                                    <Legend iconSize={8} wrapperStyle={{ fontSize: '10px' }} />
+                                    <Line type="monotone" dataKey="total_required" name="Required" stroke="#3B82F6" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="actual_available" name="Actual" stroke="#10B981" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="buffer" name="Buffer" stroke="#F59E0B" strokeWidth={2} dot={false} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : <NoDataDisplay />}
                     </div>
                 </div>
 
-                {/* 3. Skill Level Availability */}
-                <div className="bg-white p-4 rounded-xl shadow-lg shadow-slate-200/50 border border-slate-100 col-span-1 lg:col-span-3">
-                    <h3 className="text-slate-800 font-bold text-sm mb-3">Skill Distribution</h3>
-                    <div className="space-y-2">
-                        {metrics.skills.map((skill) => (
-                            <div key={skill.level} className={`p-2 rounded-lg border ${skill.color} transition-transform hover:-translate-y-0.5 duration-200`}>
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="font-bold text-sm">{skill.level}</span>
-                                    {skill.avail >= skill.req ? (
-                                        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-white/50 rounded-md backdrop-blur-sm text-emerald-700">OK</span>
-                                    ) : (
-                                        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-white/50 rounded-md backdrop-blur-sm text-red-700">Low</span>
-                                    )}
-                                </div>
-                                <div className="flex justify-between items-end">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] opacity-70 font-semibold uppercase">Avail</span>
-                                        <span className="font-bold text-sm">{skill.avail}</span>
+                {/* Skill Matrix (Spans 1 column) */}
+                <div className="col-span-1 bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden">
+                    <h3 className="text-sm font-bold text-slate-800 mb-1 shrink-0">Skill Matrix</h3>
+                    <div className="flex-1 overflow-y-auto pr-1 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-200">
+                        {metrics.skills.length > 0 ? (
+                            metrics.skills.map((skill) => (
+                                <div key={skill.level} className={`p-2 rounded-lg border ${skill.color} flex items-center justify-between`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className={`p-1 rounded-md bg-white/50 backdrop-blur-sm`}>
+                                            <Award size={14} className="opacity-70" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-[10px] sm:text-xs">{skill.level}</h4>
+                                            <p className="text-[9px] sm:text-[10px] opacity-70">Gap: <span className={skill.gap < 0 ? 'text-red-500 font-bold' : 'text-emerald-500 font-bold'}>{skill.gap}</span></p>
+                                        </div>
                                     </div>
-                                    <div className="h-6 w-px bg-current opacity-20 mx-2"></div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[10px] opacity-70 font-semibold uppercase">Req</span>
-                                        <span className="font-bold text-sm">{skill.req}</span>
+                                    <div className="flex gap-2 sm:gap-3 opacity-90">
+                                        <div className="text-right">
+                                            <p className="text-[8px] sm:text-[9px] opacity-60 uppercase font-semibold">Req</p>
+                                            <p className="font-bold text-xs sm:text-sm">{skill.req}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[8px] sm:text-[9px] opacity-60 uppercase font-semibold">Avail</p>
+                                            <p className="font-bold text-xs sm:text-sm">{skill.avail}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        ) : <NoDataDisplay message="No Skills Data" />}
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Row: Absenteeism, Attrition, Dojo */}
+            <div className="grid grid-cols-3 gap-3 h-full min-h-0">
+
+                {/* Absenteeism Trend */}
+                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden">
+                    <h3 className="text-sm font-bold text-slate-800 mb-1 shrink-0">Absenteeism Trend</h3>
+                    <div className="flex-1 min-h-0 w-full">
+                        {metrics.absenteeismTrend.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={metrics.absenteeismTrend}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                    <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="#94A3B8" />
+                                    <YAxis tick={{ fontSize: 10 }} stroke="#94A3B8" />
+                                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }} />
+                                    <Area type="monotone" dataKey="rate" name="Absenteeism %" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.1} strokeWidth={2} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : <NoDataDisplay />}
                     </div>
                 </div>
 
+                {/* Attrition Rate */}
+                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden">
+                    <h3 className="text-sm font-bold text-slate-800 mb-1 shrink-0">Attrition Rate</h3>
+                    <div className="flex-1 min-h-0 w-full">
+                        {metrics.attritionTrend.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={metrics.attritionTrend} barCategoryGap="20%">
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                    <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94A3B8" />
+                                    <YAxis tick={{ fontSize: 10 }} stroke="#94A3B8" />
+                                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }} />
+                                    <Bar dataKey="rate" name="Attrition %" fill="#EF4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : <NoDataDisplay />}
+                    </div>
+                </div>
+
+                {/* Dojo Trend */}
+                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden">
+                    <h3 className="text-sm font-bold text-slate-800 mb-1 shrink-0">Dojo Availability</h3>
+                    <div className="flex-1 min-h-0 w-full">
+                        {metrics.dojoTrend.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={metrics.dojoTrend}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                    <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="#94A3B8" />
+                                    <YAxis tick={{ fontSize: 10 }} stroke="#94A3B8" />
+                                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }} />
+                                    <Bar dataKey="count" name="Available Dojo Manpower" fill="#F59E0B" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : <NoDataDisplay />}
+                    </div>
+                </div>
             </div>
+
+            {/* Upload Modal Overlay */}
+            {isUploadModalOpen && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full relative animate-in zoom-in-95 duration-200">
+                        <button
+                            onClick={() => setIsUploadModalOpen(false)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                        <AttendanceUpload />
+                    </div>
+                </div>
+            )}
+
+            {/* Required Manpower Modal Overlay */}
+            {isSetRequiredModalOpen && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full relative animate-in zoom-in-95 duration-200">
+                        <button
+                            onClick={() => setIsSetRequiredModalOpen(false)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                        <SetRequiredManpower
+                            onClose={() => setIsSetRequiredModalOpen(false)}
+                            onSuccess={() => {
+                                setIsSetRequiredModalOpen(false);
+                                // A hacky but safe way to trigger a re-fetch is to quickly toggle a state
+                                // Since we already have an interval polling, the user might just wait 30s.
+                                // Or we could add a `refreshTrigger` state to the dependency array. Let's just rely on the user to see the change quickly if we add a forced refresh.
+                                // The most simple way here is to let the user see it on next poll, or we can reload the page for them.
+                                window.location.reload();
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
