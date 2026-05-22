@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
                 setUser(response.data.user);
             // eslint-disable-next-line no-unused-vars
             } catch (error) {
+                localStorage.removeItem('token');
                 setUser(null);
             } finally {
                 setLoading(false);
@@ -24,13 +25,22 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (username, password) => {
         const response = await api.post('/auth/login', { username, password });
+        if (response.data.token) {
+            localStorage.setItem('token', response.data.token);
+        }
         setUser(response.data.user);
         return response.data;
     };
 
     const logout = async () => {
-        await api.post('/auth/logout');
-        setUser(null);
+        try {
+            await api.post('/auth/logout');
+        } catch (error) {
+            console.error("Logout API error:", error);
+        } finally {
+            localStorage.removeItem('token');
+            setUser(null);
+        }
     };
 
     return (

@@ -15,6 +15,7 @@ import {
     Bell
 } from 'lucide-react';
 import { FilterProvider, useFilters } from '../context/FilterContext';
+import { useAuth } from '../context/AuthContext';
 
 const SelectInput = ({ value, onChange, options, placeholder, className = "relative w-28 lg:w-32 xl:w-36 shrink-0" }) => (
     <div className={className}>
@@ -46,6 +47,7 @@ const DateInput = ({ value, onChange, label }) => (
 
 const LayoutContent = () => {
     const navigate = useNavigate();
+    const { logout } = useAuth();
     const {
         selectedDept, setSelectedDept,
         selectedSection, setSelectedSection,
@@ -64,7 +66,7 @@ const LayoutContent = () => {
     const userMenuRef = React.useRef(null);
 
     const handleLogout = () => {
-        localStorage.removeItem('isAuthenticated');
+        logout();
         navigate('/login');
     };
 
