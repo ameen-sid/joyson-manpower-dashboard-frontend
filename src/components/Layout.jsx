@@ -62,7 +62,7 @@ const LayoutContent = () => {
                     <header className="sticky top-0 h-20 bg-slate-900 shadow-xl z-50 px-4 md:px-8 flex items-center justify-between relative shrink-0">
                         <div className="flex items-center space-x-3 md:space-x-4 z-10 shrink-0">
                             <div className="flex items-center justify-center h-9 w-9 md:h-10 md:w-10 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-900/50">
-                                <Activity className="h-5 w-5 md:h-6 md:w-6" />
+                                <img src="/logo.png" alt="Joyson logo" className="h-7 w-7 md:h-8 md:w-8 object-contain" />
                             </div>
                             <div>
                                 <h1 className="text-lg md:text-xl font-bold text-white tracking-wide leading-none">JOYSON</h1>
@@ -70,7 +70,7 @@ const LayoutContent = () => {
                             </div>
                             <div className="h-8 w-px bg-slate-700 mx-4 hidden lg:block"></div>
                         </div>
-                        <div className="flex-1 hidden md:flex items-center justify-center space-x-1.5 z-10 px-2 min-w-0">
+                        <div className="flex-1 hidden xl:flex items-center justify-center space-x-1.5 z-10 px-2 min-w-0">
                             <SelectInput value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} options={departments} placeholder="Department" />
                             <SelectInput value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)} options={sections} placeholder="Section" />
                             <SelectInput value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} options={lines} placeholder="Line" />
@@ -100,11 +100,17 @@ const LayoutContent = () => {
                             )}
                         </div>
                     </header>
-                    <div className="md:hidden bg-slate-800 p-3 flex gap-2 overflow-x-auto z-10 border-b border-slate-700">
-                        <SelectInput value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} options={departments} placeholder="Dept"/>
-                        <SelectInput value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)} options={sections} placeholder="Sect"/>
-                        <SelectInput value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} options={lines} placeholder="Line"/>
-                        <SelectInput value={selectedShift} onChange={(e) => setSelectedShift(e.target.value)} options={shifts} placeholder="Shift"/>
+                    <div className="xl:hidden bg-slate-900 px-4 py-3 flex items-center gap-2.5 overflow-x-auto z-10 border-t border-b border-slate-800 scrollbar-none">
+                        <SelectInput value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} options={departments} placeholder="Dept" className="relative w-28 shrink-0" />
+                        <SelectInput value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)} options={sections} placeholder="Sect" className="relative w-28 shrink-0" />
+                        <SelectInput value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} options={lines} placeholder="Line" className="relative w-28 shrink-0" />
+                        <SelectInput value={selectedShift} onChange={(e) => setSelectedShift(e.target.value)} options={shifts} placeholder="Shift" className="relative w-24 shrink-0" />
+                        <div className="flex items-center space-x-1 shrink-0">
+                            <DateInput value={startDate} onChange={(e) => setStartDate(e.target.value)} label="From" />
+                            <span className="text-slate-400 font-medium text-xs px-1.5">to</span>
+                            <DateInput value={endDate} onChange={(e) => setEndDate(e.target.value)} label="To" />
+                        </div>
+                        <button onClick={clearFilters} className="p-2 ml-1 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all cursor-pointer shrink-0" title="Reset Filters"><RotateCcw size={16} /></button>
                     </div>
                 </>
             )}

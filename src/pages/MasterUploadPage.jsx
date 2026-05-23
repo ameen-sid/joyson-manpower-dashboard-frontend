@@ -32,7 +32,7 @@ const UPLOAD_CONFIGS = [
         title: 'Head Count Data',
         icon: <Users className="text-purple-500" size={24} />,
         endpoint: '/upload/headcount',
-        format: 'Entity | Emp.ID | Employee Name | Gender | Division/Plant | Department | Section | Active / Left | Category | Date of Leaving | IsDojo | Dojo Certified Date | Date of Join',
+        format: 'Entity | Emp.ID | Employee Name | Gender | Division/Plant | Department | Section | Active / Left | Category | Date of Leaving | IsDojo | Dojo Certified Date | Date of Join | Shift',
         desc: 'Replaces the entire employee master roster.'
     },
     {
@@ -60,7 +60,7 @@ const MasterUploadBox = ({ config }) => {
     };
 
     const handleUpload = async () => {
-        
+
         if (!file) return;
         setLoading(true);
         setStatus(null);
@@ -101,7 +101,7 @@ const MasterUploadBox = ({ config }) => {
                 </div>
             </div>
             <div className="bg-slate-50 rounded p-2 mb-4 border border-slate-100 shrink-0">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Expected Format Header:</p>
+                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Expected Format Columns:</p>
                 <code className="text-[10px] text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200 block break-words">{config.format}</code>
             </div>
             <div className="mt-auto space-y-3">

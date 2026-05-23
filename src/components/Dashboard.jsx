@@ -3,7 +3,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import { Users, Filter, Award } from 'lucide-react';
 import api from '../utils/api';
 import { useFilters } from '../context/FilterContext';
-import AttendanceUpload from './AttendanceUpload';
 import SetRequiredManpower from './SetRequiredManpower';
 
 const NoDataDisplay = ({ message = "No Data Available" }) => (
@@ -19,7 +18,6 @@ const NoDataDisplay = ({ message = "No Data Available" }) => (
 const Dashboard = () => {
 
     const { selectedDept, selectedSection, selectedLine, selectedShift, startDate, endDate } = useFilters();
-    const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false);
     const [isSetRequiredModalOpen, setIsSetRequiredModalOpen] = React.useState(false);
 
     const [metrics, setMetrics] = React.useState({
@@ -99,7 +97,6 @@ const Dashboard = () => {
                         <h3 className="text-sm font-bold text-slate-800">Total Manpower vs Actual vs Buffer</h3>
                         <div className="flex gap-2">
                             <button onClick={() => setIsSetRequiredModalOpen(true)} className="bg-emerald-50 border border-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors flex items-center gap-1.5"><Users size={14} /> Set Required Manpower</button>
-                            <button onClick={() => setIsUploadModalOpen(true)} className="bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-600 hover:text-white px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors flex items-center gap-1.5"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> Upload Attendance</button>
                         </div>
                     </div>
                     <div className="flex-1 min-h-0 w-full">
@@ -204,15 +201,6 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
-
-            {isUploadModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full relative animate-in zoom-in-95 duration-200">
-                        <button onClick={() => setIsUploadModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
-                        <AttendanceUpload />
-                    </div>
-                </div>
-            )}
 
             {isSetRequiredModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">

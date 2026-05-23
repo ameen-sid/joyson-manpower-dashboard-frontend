@@ -35,13 +35,13 @@ const LoginPage = () => {
                 <div className="absolute -bottom-32 -left-40 w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
                 <div className="relative z-10">
                     <div className="flex items-center space-x-2">
-                        <Activity className="h-8 w-8 text-blue-400" />
-                        <span className="text-xl font-bold tracking-wider">JOYSON</span>
+                        <img src="/logo.png" alt="Joyson logo" className="w-12 h-12" />
+                        <span className="text-xl font-bold tracking-wider">JOYSON SAFETY SYSTEMS</span>
                     </div>
                 </div>
                 <div className="relative z-10 max-w-lg">
                     <h2 className="text-5xl font-extrabold mb-6 leading-tight">
-                        Operational Excellence <br />
+                        Manpower <br />
                         <span className="text-blue-400">Dashboard</span>
                     </h2>
                     <p className="text-slate-400 text-lg mb-8 leading-relaxed">Monitoring of manpower availability and skill distribution. Streamline your industrial operations with data-driven insights.</p>
@@ -52,7 +52,7 @@ const LoginPage = () => {
                         </div>
                         <div className="flex items-center">
                             <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                            v2.4.0
+                            v1.2.0
                         </div>
                     </div>
                 </div>
