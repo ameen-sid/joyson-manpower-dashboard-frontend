@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../utils/api';
 
 const FilterContext = createContext();
@@ -8,7 +8,7 @@ export const useFilters = () => {
 };
 
 export const FilterProvider = ({ children }) => {
-    // Selected Values
+
     const [selectedDept, setSelectedDept] = useState('');
     const [selectedSection, setSelectedSection] = useState('');
     const [selectedLine, setSelectedLine] = useState('');
@@ -16,14 +16,13 @@ export const FilterProvider = ({ children }) => {
 
     const [startDate, setStartDate] = useState(() => {
         const now = new Date();
-        // Create date for 1st of current month using local time components
         const d = new Date(now.getFullYear(), now.getMonth(), 1);
-        // Format manually to YYYY-MM-DD to preserve local values
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     });
+
     const [endDate, setEndDate] = useState(() => {
         const d = new Date();
         const year = d.getFullYear();
@@ -32,15 +31,12 @@ export const FilterProvider = ({ children }) => {
         return `${year}-${month}-${day}`;
     });
 
-    // Options
     const [departments, setDepartments] = useState([]);
     const [sections, setSections] = useState([]);
     const [lines, setLines] = useState([]);
     const [shifts, setShifts] = useState(['A', 'B', 'C', 'General']);
-
     const [loading, setLoading] = useState(false);
 
-    // Initial load
     useEffect(() => {
         const fetchFilters = async () => {
             setLoading(true);
@@ -62,17 +58,15 @@ export const FilterProvider = ({ children }) => {
         fetchFilters();
     }, []);
 
-    // Clear all filters
     const clearFilters = () => {
         setSelectedDept('');
         setSelectedSection('');
         setSelectedLine('');
         setSelectedShift('');
 
-        // Reset dates to Current Month
         const end = new Date();
         const start = new Date();
-        start.setDate(1); // 1st of current month
+        start.setDate(1);
 
         setEndDate(end.toISOString().split('T')[0]);
         setStartDate(start.toISOString().split('T')[0]);

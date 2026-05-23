@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { UploadCloud, CheckCircle2, AlertCircle, Loader2, Database, Users, GitMerge, FileSpreadsheet, Map } from 'lucide-react';
 import api from '../utils/api';
 
@@ -46,9 +46,10 @@ const UPLOAD_CONFIGS = [
 ];
 
 const MasterUploadBox = ({ config }) => {
+
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [status, setStatus] = useState(null); // { type: 'success' | 'error', message: '', details: [] }
+    const [status, setStatus] = useState(null);
     const fileInputRef = useRef(null);
 
     const handleFileChange = (e) => {
@@ -59,14 +60,13 @@ const MasterUploadBox = ({ config }) => {
     };
 
     const handleUpload = async () => {
+        
         if (!file) return;
-
         setLoading(true);
         setStatus(null);
 
         const formData = new FormData();
         formData.append('file', file);
-
         try {
             const response = await api.post(config.endpoint, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -79,7 +79,6 @@ const MasterUploadBox = ({ config }) => {
             });
             setFile(null);
             if (fileInputRef.current) fileInputRef.current.value = '';
-
         } catch (error) {
             const errRes = error.response?.data;
             setStatus({
@@ -95,32 +94,18 @@ const MasterUploadBox = ({ config }) => {
     return (
         <div className="bg-white border text-left border-slate-200 shadow-sm rounded-xl p-5 flex flex-col transition-all hover:shadow-md">
             <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-slate-50 rounded-lg shrink-0">
-                    {config.icon}
-                </div>
+                <div className="p-2 bg-slate-50 rounded-lg shrink-0">{config.icon}</div>
                 <div>
                     <h3 className="font-bold text-slate-800 text-[15px] leading-tight">{config.title}</h3>
                     <p className="text-[11px] text-slate-500 mt-0.5">{config.desc}</p>
                 </div>
             </div>
-
             <div className="bg-slate-50 rounded p-2 mb-4 border border-slate-100 shrink-0">
                 <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Expected Format Header:</p>
-                <code className="text-[10px] text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200 block break-words">
-                    {config.format}
-                </code>
+                <code className="text-[10px] text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200 block break-words">{config.format}</code>
             </div>
-
             <div className="mt-auto space-y-3">
-                <input
-                    type="file"
-                    accept=".xlsx, .xls"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    ref={fileInputRef}
-                    id={`file-upload-${config.id}`}
-                />
-
+                <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} className="hidden" ref={fileInputRef} id={`file-upload-${config.id}`} />
                 {status && (
                     <div className={`p-3 rounded-lg text-xs border ${status.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
                         <div className="flex items-start gap-2">
@@ -136,30 +121,13 @@ const MasterUploadBox = ({ config }) => {
                         </div>
                     </div>
                 )}
-
                 <div className="flex gap-2">
-                    <button
-                        onClick={() => document.getElementById(`file-upload-${config.id}`).click()}
-                        className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors border border-slate-200"
-                    >
-                        {file ? file.name : 'Choose Excel File'}
-                    </button>
-
-                    <button
-                        onClick={handleUpload}
-                        disabled={!file || loading}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 min-w-[100px]
-                            ${(!file || loading)
-                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                : 'bg-slate-800 text-white hover:bg-slate-700 hover:shadow-md'
-                            }`}
-                    >
-                        {loading ? <Loader2 size={14} className="animate-spin" /> : (
-                            <>
-                                <UploadCloud size={14} />
-                                Upload
-                            </>
-                        )}
+                    <button onClick={() => document.getElementById(`file-upload-${config.id}`).click()} className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors border border-slate-200">{file ? file.name : 'Choose Excel File'}</button>
+                    <button onClick={handleUpload} disabled={!file || loading} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 min-w-[100px] ${(!file || loading) ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-800 text-white hover:bg-slate-700 hover:shadow-md'}`}>
+                        {loading ? <Loader2 size={14} className="animate-spin" /> : (<>
+                            <UploadCloud size={14} />
+                            Upload
+                        </>)}
                     </button>
                 </div>
             </div>
@@ -172,11 +140,8 @@ const MasterUploadPage = () => {
         <div className="max-w-6xl mx-auto space-y-6">
             <div className="mb-6 pb-4 border-b border-slate-200">
                 <h1 className="text-2xl font-black text-slate-800">Master Data Import</h1>
-                <p className="text-sm text-slate-500 mt-1">
-                    Upload bulk definitions directly to database master tables. <strong className="text-red-500">Warning:</strong> Running these imports will TRUNCATE and entirely replace the existing table's rows to guarantee a clean state. Make sure your Excel sheets are comprehensive.
-                </p>
+                <p className="text-sm text-slate-500 mt-1">Upload bulk definitions directly to database master tables. <strong className="text-red-500">Warning:</strong> Running these imports will TRUNCATE and entirely replace the existing table's rows to guarantee a clean state. Make sure your Excel sheets are comprehensive.</p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
                 {UPLOAD_CONFIGS.map(config => (
                     <MasterUploadBox key={config.id} config={config} />

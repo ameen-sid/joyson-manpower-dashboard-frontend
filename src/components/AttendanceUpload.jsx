@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import api from '../utils/api';
 import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import * as xlsx from 'xlsx';
 
 const AttendanceUpload = () => {
+
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
@@ -19,20 +20,20 @@ const AttendanceUpload = () => {
     };
 
     const handleUpload = async () => {
+
         if (!file) {
             setMessage('Please select an Excel file to upload.');
             setSuccess(false);
             return;
         }
-
         const formData = new FormData();
         formData.append('file', file);
 
         setLoading(true);
         setMessage(null);
         setErrorList([]);
-
         try {
+
             const response = await api.post('/upload/attendance', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
@@ -44,11 +45,7 @@ const AttendanceUpload = () => {
             if (response.data.errors) {
                 setErrorList(response.data.errors);
             }
-            setFile(null); // Clear file after successful (or partially successful) upload
-
-            // Optional: trigger a refresh of dashboard data here if needed,
-            // e.g., by firing an event or calling a context function.
-
+            setFile(null);
         } catch (error) {
             setSuccess(false);
             setMessage(error.response?.data?.message || 'An error occurred during upload.');
@@ -61,10 +58,8 @@ const AttendanceUpload = () => {
     };
 
     const downloadTemplate = () => {
-        // Create a new workbook
-        const wb = xlsx.utils.book_new();
 
-        // Create sample data matching the exact required format
+        const wb = xlsx.utils.book_new();
         const wsData = [
             ['EmployeeCode', 'Date', 'Status'],
             ['EMP001', '2024-10-25', 'Present'],
@@ -72,14 +67,8 @@ const AttendanceUpload = () => {
             ['EMP003', '2024-10-25', 'Leave'],
             ['EMP004', '2024-10-25', 'HalfDay']
         ];
-
-        // Convert array of arrays to a worksheet
         const ws = xlsx.utils.aoa_to_sheet(wsData);
-
-        // Add worksheet to workbook
         xlsx.utils.book_append_sheet(wb, ws, 'AttendanceTemplate');
-
-        // Generate buffer and trigger download
         xlsx.writeFile(wb, 'Attendance_Template.xlsx');
     };
 
@@ -87,10 +76,7 @@ const AttendanceUpload = () => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col gap-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-800">Upload Daily Attendance</h3>
-                <button
-                    onClick={downloadTemplate}
-                    className="text-sm flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-                >
+                <button onClick={downloadTemplate} className="text-sm flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
                     <FileSpreadsheet size={16} />
                     <span>Download Template</span>
                 </button>
@@ -103,43 +89,21 @@ const AttendanceUpload = () => {
 
             <div className="mt-4 border-2 border-dashed border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors">
                 <Upload className="text-slate-400 mb-3" size={32} />
-
                 <label className="cursor-pointer">
-                    <span className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm">
-                        Select Excel File
-                    </span>
-                    <input
-                        type="file"
-                        className="hidden"
-                        accept=".xlsx, .xls"
-                        onChange={handleFileChange}
-                    />
+                    <span className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm">Select Excel File</span>
+                    <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleFileChange} />
                 </label>
 
                 {file && (
                     <div className="mt-4 flex items-center justify-between bg-white px-4 py-2 rounded-md shadow-sm border border-slate-200 w-full max-w-sm">
                         <span className="text-sm text-slate-700 truncate mr-3 flex-1">{file.name}</span>
-                        <button
-                            onClick={() => setFile(null)}
-                            className="text-slate-400 hover:text-red-500"
-                            title="Remove file"
-                        >
-                            <X size={16} />
-                        </button>
+                        <button onClick={() => setFile(null)} className="text-slate-400 hover:text-red-500" title="Remove file"><X size={16} /></button>
                     </div>
                 )}
             </div>
 
             <div className="mt-4 flex justify-end">
-                <button
-                    onClick={handleUpload}
-                    disabled={!file || loading}
-                    className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm flex items-center gap-2
-            ${!file || loading
-                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                        }`}
-                >
+                <button onClick={handleUpload} disabled={!file || loading} className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm flex items-center gap-2 ${!file || loading ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
                     {loading ? (
                         <>
                             <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -163,10 +127,7 @@ const AttendanceUpload = () => {
                             <AlertCircle className="text-red-500 mt-0.5" size={20} />
                         )}
                         <div className="flex-1">
-                            <p className={`text-sm font-medium ${success ? 'text-emerald-800' : 'text-red-800'}`}>
-                                {message}
-                            </p>
-
+                            <p className={`text-sm font-medium ${success ? 'text-emerald-800' : 'text-red-800'}`}>{message}</p>
                             {errorList.length > 0 && (
                                 <div className="mt-3 bg-white/60 rounded p-3 text-xs text-red-700 font-mono overflow-y-auto max-h-32 border border-red-200/50">
                                     <ul className="list-disc pl-4 space-y-1">

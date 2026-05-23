@@ -7,9 +7,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-
-  if (loading) return <div>Loading...</div>; // Or a spinner
-
+  if (loading) return <div>Loading...</div>;
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
@@ -24,7 +22,6 @@ function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="upload" element={<MasterUploadPage />} />
-            {/* Add more protected routes here */}
           </Route>
 
           <Route path="*" element={<Navigate to="/login" />} />
