@@ -1,52 +1,139 @@
-import { useState, useRef } from 'react';
-import { UploadCloud, CheckCircle2, AlertCircle, Loader2, Database, Users, GitMerge, FileSpreadsheet, Map } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { UploadCloud, CheckCircle2, AlertCircle, Loader2, Database, Users, GitMerge, Map, X } from 'lucide-react';
 import api from '../utils/api';
 
 const UPLOAD_CONFIGS = [
     {
+        id: 'departmentmaster',
+        title: 'Department Master',
+        icon: <Database className="text-blue-500" size={24} />,
+        endpoint: '/upload/department-master',
+        format: 'S. No | Department Name',
+        desc: 'Upload departments. Only the Department Name column is saved.'
+    },
+    {
+        id: 'sectionmaster',
+        title: 'Section Master',
+        icon: <GitMerge className="text-indigo-500" size={24} />,
+        endpoint: '/upload/section-master',
+        format: 'S. No | Section Name | Department Name',
+        desc: 'Upload sections. Links sections to department using matched Department Name.'
+    },
+    {
         id: 'linemaster',
         title: 'Line Master',
-        icon: <GitMerge className="text-blue-500" size={24} />,
-        endpoint: '/upload/linemaster',
-        format: 'Plantcode | Line',
-        desc: 'Replaces all production line definitions.'
-    },
-    {
-        id: 'updstationmaster',
-        title: 'UPD Station Master',
-        icon: <Map className="text-indigo-500" size={24} />,
-        endpoint: '/upload/updstationmaster',
-        format: 'Plantcode | LINE | Station | stationtype',
-        desc: 'Replaces all station mapping definitions.'
-    },
-    {
-        id: 'departmentwiseskill',
-        title: 'Department Wise Skill',
-        icon: <Database className="text-emerald-500" size={24} />,
-        endpoint: '/upload/departmentwiseskill',
-        format: 'EmployeeGroup | Department Code | StationType | Shift | Skill | IndentManpower',
-        desc: 'Replaces all station-level skill requirements.'
-    },
-    {
-        id: 'headcountdataneemranaplant',
-        title: 'Head Count Data',
-        icon: <Users className="text-purple-500" size={24} />,
-        endpoint: '/upload/headcount',
-        format: 'Entity | Emp.ID | Employee Name | Gender | Division/Plant | Department | Section | Active / Left | Category | Date of Leaving | IsDojo | Dojo Certified Date | Date of Join | Shift',
-        desc: 'Replaces the entire employee master roster.'
+        icon: <Map className="text-emerald-500" size={24} />,
+        endpoint: '/upload/line-master',
+        format: 'S. No | Line Name | Section Name | Department Name',
+        desc: 'Upload production lines. Links lines to section & department using matched names.'
     },
     {
         id: 'employeemap',
         title: 'Employee Map',
-        icon: <FileSpreadsheet className="text-amber-500" size={24} />,
-        endpoint: '/upload/employeemap',
-        format: 'PlantCode | EmployeeCode | Line/Machine | Station | StationType | Skill | Groupleader',
-        desc: 'Replaces all line-worker assignments and skills.'
+        icon: <Users className="text-purple-500" size={24} />,
+        endpoint: '/upload/employee-map',
+        format: 'S. No | Employee ID | Employee Name | Employee Code | Gender | Line Name | Section Name | Department Name | Shift | Skill | Active/Left | Category | Date of Joining | Date of Leaving | isDojo',
+        desc: 'Upload employee master roster. Auto-links line, section, and department IDs using matched names.'
     }
 ];
 
-const MasterUploadBox = ({ config }) => {
+const ResultModal = ({ isOpen, onClose, data, title }) => {
+    if (!isOpen || !data) return null;
 
+    const { summary, successRows = [], failedRows = [], message } = data;
+
+    return (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[99999] p-4">
+            <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h3 className="font-bold text-slate-800 text-lg">{title} Upload Results</h3>
+                        <p className="text-slate-400 text-xs mt-0.5">Summary of processed excel rows</p>
+                    </div>
+                    <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                        <X size={18} />
+                    </button>
+                </div>
+
+                {/* Summary Badges */}
+                <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 grid grid-cols-3 gap-4">
+                    <div className="bg-white p-3 rounded-xl border border-slate-200 text-center shadow-sm">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</div>
+                        <div className="text-xl font-black text-slate-700 mt-1">{summary?.total || 0}</div>
+                    </div>
+                    <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 text-center shadow-sm">
+                        <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Uploaded</div>
+                        <div className="text-xl font-black text-emerald-700 mt-1">{summary?.success || 0}</div>
+                    </div>
+                    <div className="bg-red-50/50 p-3 rounded-xl border border-red-100 text-center shadow-sm">
+                        <div className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Failed</div>
+                        <div className="text-xl font-black text-red-700 mt-1">{summary?.failed || 0}</div>
+                    </div>
+                </div>
+
+                {/* Alert message banner */}
+                {message && (
+                    <div className={`mx-6 mt-4 p-3.5 rounded-xl text-xs font-bold border ${
+                        failedRows.length > 0 
+                            ? 'bg-red-50 border-red-100 text-red-800' 
+                            : 'bg-emerald-50 border-emerald-100 text-emerald-800'
+                    }`}>
+                        {message}
+                    </div>
+                )}
+
+                {/* Body Details */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    {/* Failed Rows Section */}
+                    {failedRows.length > 0 && (
+                        <div>
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                                <h4 className="font-bold text-red-700 text-sm">Failed / Skipped Rows ({failedRows.length})</h4>
+                            </div>
+                            <div className="border border-red-100 rounded-xl overflow-hidden divide-y divide-red-50 max-h-52 overflow-y-auto shadow-inner bg-red-50/5">
+                                {failedRows.map((item, idx) => (
+                                    <div key={idx} className="p-3 text-xs flex justify-between items-start gap-4">
+                                        <div className="font-semibold text-slate-700 shrink-0">Row {item.row} ({item.name})</div>
+                                        <div className="text-red-600 font-medium text-right leading-snug">{item.error}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Success Rows Section */}
+                    {successRows.length > 0 && (
+                        <div>
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                                <h4 className="font-bold text-emerald-700 text-sm">Successfully Uploaded Rows ({successRows.length})</h4>
+                            </div>
+                            <div className="border border-emerald-100 rounded-xl overflow-hidden divide-y divide-emerald-50 max-h-52 overflow-y-auto shadow-inner bg-emerald-50/5">
+                                {successRows.map((item, idx) => (
+                                    <div key={idx} className="p-3 text-xs flex justify-between items-center gap-4">
+                                        <div className="font-semibold text-slate-700">Row {item.row} ({item.name})</div>
+                                        <div className="text-emerald-600 font-medium">{item.message || 'Success'}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="px-6 py-4 border-t border-slate-100 flex justify-end">
+                    <button onClick={onClose} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer">
+                        Close Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const MasterUploadBox = ({ config, onResult }) => {
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState(null);
@@ -60,7 +147,6 @@ const MasterUploadBox = ({ config }) => {
     };
 
     const handleUpload = async () => {
-
         if (!file) return;
         setLoading(true);
         setStatus(null);
@@ -72,58 +158,52 @@ const MasterUploadBox = ({ config }) => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            setStatus({
-                type: 'success',
-                message: response.data.message,
-                details: response.data.errors || []
-            });
+            onResult(response.data);
             setFile(null);
             if (fileInputRef.current) fileInputRef.current.value = '';
         } catch (error) {
             const errRes = error.response?.data;
-            setStatus({
-                type: 'error',
-                message: errRes?.message || 'Failed to trigger upload.',
-                details: errRes?.errors || []
-            });
+            if (errRes && (errRes.successRows || errRes.failedRows)) {
+                onResult(errRes);
+            } else {
+                setStatus({
+                    type: 'error',
+                    message: errRes?.message || 'Failed to trigger upload.'
+                });
+            }
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="bg-white border text-left border-slate-200 shadow-sm rounded-xl p-5 flex flex-col transition-all hover:shadow-md">
-            <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-slate-50 rounded-lg shrink-0">{config.icon}</div>
+        <div className="bg-white border text-left border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col transition-all hover:shadow-md hover:border-slate-300">
+            <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 shrink-0">{config.icon}</div>
                 <div>
-                    <h3 className="font-bold text-slate-800 text-[15px] leading-tight">{config.title}</h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">{config.desc}</p>
+                    <h3 className="font-extrabold text-slate-800 text-base leading-tight">{config.title}</h3>
+                    <p className="text-xs text-slate-400 mt-1 font-medium leading-relaxed">{config.desc}</p>
                 </div>
             </div>
-            <div className="bg-slate-50 rounded p-2 mb-4 border border-slate-100 shrink-0">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Expected Format Columns:</p>
-                <code className="text-[10px] text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200 block break-words">{config.format}</code>
+            <div className="bg-slate-50 rounded-xl p-3.5 mb-5 border border-slate-100 shrink-0">
+                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1.5 tracking-wider">Required Excel Format Columns:</p>
+                <code className="text-[10px] text-slate-700 bg-white px-2 py-1 rounded-md border border-slate-200 block break-words leading-relaxed font-mono font-medium">{config.format}</code>
             </div>
             <div className="mt-auto space-y-3">
                 <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} className="hidden" ref={fileInputRef} id={`file-upload-${config.id}`} />
                 {status && (
-                    <div className={`p-3 rounded-lg text-xs border ${status.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
+                    <div className="p-3 rounded-xl text-xs border bg-red-50 border-red-100 text-red-700">
                         <div className="flex items-start gap-2">
-                            {status.type === 'success' ? <CheckCircle2 size={14} className="mt-0.5 shrink-0" /> : <AlertCircle size={14} className="mt-0.5 shrink-0" />}
+                            <AlertCircle size={14} className="mt-0.5 shrink-0" />
                             <div>
-                                <p className="font-semibold">{status.message}</p>
-                                {status.details && status.details.length > 0 && (
-                                    <ul className="mt-1 list-disc pl-4 space-y-0.5 opacity-80 max-h-20 overflow-y-auto pr-2">
-                                        {status.details.map((err, i) => <li key={i}>{err}</li>)}
-                                    </ul>
-                                )}
+                                <p className="font-bold">{status.message}</p>
                             </div>
                         </div>
                     </div>
                 )}
-                <div className="flex gap-2">
-                    <button onClick={() => document.getElementById(`file-upload-${config.id}`).click()} className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors border border-slate-200">{file ? file.name : 'Choose Excel File'}</button>
-                    <button onClick={handleUpload} disabled={!file || loading} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 min-w-[100px] ${(!file || loading) ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-800 text-white hover:bg-slate-700 hover:shadow-md'}`}>
+                <div className="flex gap-2.5">
+                    <button onClick={() => document.getElementById(`file-upload-${config.id}`).click()} className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all border border-slate-200 truncate cursor-pointer">{file ? file.name : 'Choose Excel File'}</button>
+                    <button onClick={handleUpload} disabled={!file || loading} className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 min-w-[110px] cursor-pointer ${(!file || loading) ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-800 hover:shadow-md'}`}>
                         {loading ? <Loader2 size={14} className="animate-spin" /> : (<>
                             <UploadCloud size={14} />
                             Upload
@@ -136,17 +216,24 @@ const MasterUploadBox = ({ config }) => {
 };
 
 const MasterUploadPage = () => {
+    const [resultData, setResultData] = useState(null);
+    const [resultTitle, setResultTitle] = useState('');
+
     return (
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
             <div className="mb-6 pb-4 border-b border-slate-200">
-                <h1 className="text-2xl font-black text-slate-800">Master Data Import</h1>
-                <p className="text-sm text-slate-500 mt-1">Upload bulk definitions directly to database master tables. <strong className="text-red-500">Warning:</strong> Running these imports will TRUNCATE and entirely replace the existing table's rows to guarantee a clean state. Make sure your Excel sheets are comprehensive.</p>
+                <h1 className="text-2xl font-black text-slate-950">Master Data Import</h1>
+                <p className="text-sm text-slate-500 mt-1">Upload your plant hierarchy and employee map using standard Excel sheets. System verifies name matches and reports issues.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                 {UPLOAD_CONFIGS.map(config => (
-                    <MasterUploadBox key={config.id} config={config} />
+                    <MasterUploadBox key={config.id} config={config} onResult={(data) => {
+                        setResultData(data);
+                        setResultTitle(config.title);
+                    }} />
                 ))}
             </div>
+            <ResultModal isOpen={!!resultData} onClose={() => setResultData(null)} data={resultData} title={resultTitle} />
         </div>
     );
 };
