@@ -5,12 +5,31 @@ import { useFilters } from '../context/FilterContext';
 
 const SetRequiredManpower = ({ onClose, onSuccess }) => {
 
-    const { selectedDept, selectedSection, selectedLine, selectedShift, endDate, departments, sections, lines, shifts } = useFilters();
+    const { selectedDept, selectedSection, selectedLine, selectedShift, endDate, departments, allSections, allLines, shifts } = useFilters();
     const [date, setDate] = useState(endDate || new Date().toISOString().split('T')[0]);
     const [dept, setDept] = useState(selectedDept || '');
     const [section, setSection] = useState(selectedSection || '');
     const [line, setLine] = useState(selectedLine || '');
     const [shift, setShift] = useState(selectedShift || '');
+
+    const handleDeptChange = (val) => {
+        setDept(val);
+        setSection('');
+        setLine('');
+    };
+
+    const handleSectionChange = (val) => {
+        setSection(val);
+        setLine('');
+    };
+
+    const modalSections = dept 
+        ? allSections.filter(s => s.department_name === dept).map(s => s.section_name)
+        : [];
+
+    const modalLines = (dept && section)
+        ? allLines.filter(l => l.department_name === dept && l.section_name === section).map(l => l.line_name)
+        : [];
 
     const [levels, setLevels] = useState({
         l0: 0,
@@ -70,6 +89,8 @@ const SetRequiredManpower = ({ onClose, onSuccess }) => {
         }
     };
 
+    const isFormInvalid = !date;
+
     return (
         <div className="p-6">
             <h2 className="text-xl font-bold text-slate-800 mb-2">Set Required Manpower</h2>
@@ -85,23 +106,23 @@ const SetRequiredManpower = ({ onClose, onSuccess }) => {
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 grid grid-cols-1 sm:grid-cols-4 gap-3">
                     <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">Department</label>
-                        <select value={dept} onChange={(e) => setDept(e.target.value)} className="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm bg-white">
+                        <select value={dept} onChange={(e) => handleDeptChange(e.target.value)} className="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm bg-white">
                             <option value="">All</option>
                             {departments?.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                     </div>
                     <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">Section</label>
-                        <select value={section} onChange={(e) => setSection(e.target.value)} className="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm bg-white">
+                        <select disabled={!dept} value={section} onChange={(e) => handleSectionChange(e.target.value)} className="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm bg-white disabled:bg-slate-100 disabled:cursor-not-allowed">
                             <option value="">All</option>
-                            {sections?.map(s => <option key={s} value={s}>{s}</option>)}
+                            {modalSections?.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                     </div>
                     <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">Line</label>
-                        <select value={line} onChange={(e) => setLine(e.target.value)} className="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm bg-white">
+                        <select disabled={!section} value={line} onChange={(e) => setLine(e.target.value)} className="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm bg-white disabled:bg-slate-100 disabled:cursor-not-allowed">
                             <option value="">All</option>
-                            {lines?.map(l => <option key={l} value={l}>{l}</option>)}
+                            {modalLines?.map(l => <option key={l} value={l}>{l}</option>)}
                         </select>
                     </div>
                     <div>
@@ -134,7 +155,7 @@ const SetRequiredManpower = ({ onClose, onSuccess }) => {
                 </div>
                 <div className="pt-4 flex justify-end gap-3">
                     <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-transparent">Cancel</button>
-                    <button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-lg text-sm font-semibold shadow hover:shadow-md transition-all flex items-center justify-center min-w-[100px]">{loading ? 'Saving...' : 'Save Config'}</button>
+                    <button type="submit" disabled={loading || isFormInvalid} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-lg text-sm font-semibold shadow hover:shadow-md transition-all flex items-center justify-center min-w-[100px]">{loading ? 'Saving...' : 'Save Config'}</button>
                 </div>
             </form>
         </div>

@@ -4,9 +4,9 @@ import { LogOut, ChevronDown, Calendar as CalendarIcon, RotateCcw, Activity, Upl
 import { FilterProvider, useFilters } from '../context/FilterContext';
 import { useAuth } from '../context/AuthContext';
 
-const SelectInput = ({ value, onChange, options, placeholder, className = "relative w-28 lg:w-32 xl:w-36 shrink-0" }) => (
-    <div className={className}>
-        <select value={value} onChange={onChange} className="appearance-none w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent block h-9 px-3 pr-8 shadow-sm transition-all hover:border-slate-600 cursor-pointer">
+const SelectInput = ({ value, onChange, options, placeholder, disabled, className = "relative w-28 lg:w-32 xl:w-36 shrink-0" }) => (
+    <div className={`${className} ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+        <select disabled={disabled} value={value} onChange={onChange} className="appearance-none w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent block h-9 px-3 pr-8 shadow-sm transition-all hover:border-slate-600 cursor-pointer disabled:cursor-not-allowed disabled:bg-slate-900 disabled:border-slate-800">
             <option value="">{placeholder}</option>
             {options.map(o => <option key={o} value={o}>{o}</option>)}
         </select>
@@ -70,8 +70,8 @@ const LayoutContent = () => {
                 {!isUploadPage ? (
                     <div className="flex-1 hidden xl:flex items-center justify-center space-x-1.5 z-10 px-2 min-w-0">
                         <SelectInput value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} options={departments} placeholder="Department" />
-                        <SelectInput value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)} options={sections} placeholder="Section" />
-                        <SelectInput value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} options={lines} placeholder="Line" />
+                        <SelectInput value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)} options={sections} placeholder="Section" disabled={!selectedDept} />
+                        <SelectInput value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} options={lines} placeholder="Line" disabled={!selectedSection} />
                         <SelectInput value={selectedShift} onChange={(e) => setSelectedShift(e.target.value)} options={shifts} placeholder="Shift" />
                         <div className="flex items-center space-x-1 ml-1.5 shrink-0">
                             <DateInput value={startDate} onChange={(e) => setStartDate(e.target.value)} label="From" />
@@ -114,8 +114,8 @@ const LayoutContent = () => {
             {!isUploadPage && (
                 <div className="xl:hidden bg-slate-900 px-4 py-3 flex items-center gap-2.5 overflow-x-auto z-10 border-t border-b border-slate-800 scrollbar-none">
                     <SelectInput value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} options={departments} placeholder="Dept" className="relative w-28 shrink-0" />
-                    <SelectInput value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)} options={sections} placeholder="Sect" className="relative w-28 shrink-0" />
-                    <SelectInput value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} options={lines} placeholder="Line" className="relative w-28 shrink-0" />
+                    <SelectInput value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)} options={sections} placeholder="Sect" className="relative w-28 shrink-0" disabled={!selectedDept} />
+                    <SelectInput value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} options={lines} placeholder="Line" className="relative w-28 shrink-0" disabled={!selectedSection} />
                     <SelectInput value={selectedShift} onChange={(e) => setSelectedShift(e.target.value)} options={shifts} placeholder="Shift" className="relative w-24 shrink-0" />
                     <div className="flex items-center space-x-1 shrink-0">
                         <DateInput value={startDate} onChange={(e) => setStartDate(e.target.value)} label="From" />

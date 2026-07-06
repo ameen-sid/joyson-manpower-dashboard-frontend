@@ -7,6 +7,23 @@ export const useFilters = () => {
     return useContext(FilterContext);
 };
 
+const getOneMonthBeforeStr = () => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const getTodayStr = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 export const FilterProvider = ({ children }) => {
 
     const [selectedDept, setSelectedDept] = useState('');
@@ -14,26 +31,12 @@ export const FilterProvider = ({ children }) => {
     const [selectedLine, setSelectedLine] = useState('');
     const [selectedShift, setSelectedShift] = useState('');
 
-    const [startDate, setStartDate] = useState(() => {
-        const now = new Date();
-        const d = new Date(now.getFullYear(), now.getMonth(), 1);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    });
-
-    const [endDate, setEndDate] = useState(() => {
-        const d = new Date();
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    });
+    const [startDate, setStartDate] = useState(() => getOneMonthBeforeStr());
+    const [endDate, setEndDate] = useState(() => getTodayStr());
 
     const [departments, setDepartments] = useState([]);
-    const [sections, setSections] = useState([]);
-    const [lines, setLines] = useState([]);
+    const [allSections, setAllSections] = useState([]);
+    const [allLines, setAllLines] = useState([]);
     const [shifts, setShifts] = useState(['A', 'B', 'C', 'General']);
     const [loading, setLoading] = useState(false);
 
@@ -44,8 +47,8 @@ export const FilterProvider = ({ children }) => {
                 const res = await api.get('/dashboard/filters');
                 if (res.data.success) {
                     setDepartments(res.data.departments);
-                    setSections(res.data.sections);
-                    setLines(res.data.lines);
+                    setAllSections(res.data.sections);
+                    setAllLines(res.data.lines);
                     setShifts(res.data.shifts || ['A', 'B', 'C', 'General']);
                 }
             } catch (error) {
@@ -58,30 +61,56 @@ export const FilterProvider = ({ children }) => {
         fetchFilters();
     }, []);
 
+    const handleDeptChange = (dept) => {
+        setSelectedDept(dept);
+        setSelectedSection('');
+        setSelectedLine('');
+    };
+
+    const handleSectionChange = (sect) => {
+        setSelectedSection(sect);
+        setSelectedLine('');
+    };
+
     const clearFilters = () => {
         setSelectedDept('');
         setSelectedSection('');
         setSelectedLine('');
         setSelectedShift('');
-
-        const end = new Date();
-        const start = new Date();
-        start.setDate(1);
-
-        setEndDate(end.toISOString().split('T')[0]);
-        setStartDate(start.toISOString().split('T')[0]);
+        setStartDate(getOneMonthBeforeStr());
+        setEndDate(getTodayStr());
     };
 
+    const filteredSections = selectedDept 
+        ? allSections.filter(s => s.department_name === selectedDept)
+        : [];
+
+    const filteredLines = (selectedDept && selectedSection)
+        ? allLines.filter(l => l.department_name === selectedDept && l.section_name === selectedSection)
+        : [];
+
+    // Map objects to names for dropdowns
+    const sectionNames = filteredSections.map(s => s.section_name);
+    const lineNames = filteredLines.map(l => l.line_name);
+
     const value = {
-        selectedDept, setSelectedDept,
-        selectedSection, setSelectedSection,
-        selectedLine, setSelectedLine,
-        selectedShift, setSelectedShift,
-        startDate, setStartDate,
-        endDate, setEndDate,
+        selectedDept, 
+        setSelectedDept: handleDeptChange,
+        selectedSection, 
+        setSelectedSection: handleSectionChange,
+        selectedLine, 
+        setSelectedLine,
+        selectedShift, 
+        setSelectedShift,
+        startDate, 
+        setStartDate,
+        endDate, 
+        setEndDate,
         departments,
-        sections,
-        lines,
+        sections: sectionNames,
+        lines: lineNames,
+        allSections,
+        allLines,
         shifts,
         loading,
         clearFilters
