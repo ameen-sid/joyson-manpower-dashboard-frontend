@@ -15,6 +15,58 @@ const NoDataDisplay = ({ message = "No Data Available" }) => (
     </div>
 );
 
+const CustomTooltip = ({ active, payload, label, externalData }) => {
+    if (active && label) {
+        const record = externalData?.find(d => d.date === label);
+        if (record) {
+            const actual = record.actual_available;
+            const required = record.total_required;
+            const buffer = record.buffer;
+            return (
+                <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-100 text-xs font-semibold">
+                    <p className="text-slate-500 mb-1.5">{label}</p>
+                    <p className="text-emerald-600">Actual: {actual !== null ? actual : 'Weekly Off'}</p>
+                    <p className="text-amber-500">Buffer: {buffer !== null ? buffer : 'Weekly Off'}</p>
+                    <p className="text-blue-600">Required: {required !== null ? required : 'Weekly Off'}</p>
+                </div>
+            );
+        }
+    }
+    return null;
+};
+
+const AbsenteeismTooltip = ({ active, payload, label, externalData }) => {
+    if (active && label) {
+        const record = externalData?.find(d => d.date === label);
+        if (record) {
+            const rate = record.rate;
+            return (
+                <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-100 text-xs font-semibold">
+                    <p className="text-slate-500 mb-1.5">{label}</p>
+                    <p className="text-purple-600">Absenteeism %: {rate !== null ? `${rate}%` : 'Weekly Off'}</p>
+                </div>
+            );
+        }
+    }
+    return null;
+};
+
+const DojoTooltip = ({ active, payload, label, externalData }) => {
+    if (active && label) {
+        const record = externalData?.find(d => d.date === label);
+        if (record) {
+            const count = record.count;
+            return (
+                <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-100 text-xs font-semibold">
+                    <p className="text-slate-500 mb-1.5">{label}</p>
+                    <p className="text-amber-500">Dojo Manpower: {count !== null ? count : 'Weekly Off'}</p>
+                </div>
+            );
+        }
+    }
+    return null;
+};
+
 const Dashboard = () => {
 
     const { selectedDept, selectedSection, selectedLine, selectedShift, startDate, endDate } = useFilters();
@@ -106,11 +158,12 @@ const Dashboard = () => {
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                                     <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="#94A3B8" />
                                     <YAxis tick={{ fontSize: 10 }} stroke="#94A3B8" />
-                                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }} />
+                                    <RechartsTooltip content={<CustomTooltip externalData={metrics.manpowerTrend} />} />
                                     <Legend iconSize={8} wrapperStyle={{ fontSize: '10px' }} />
-                                    <Line type="monotone" dataKey="total_required" name="Required" stroke="#3B82F6" strokeWidth={2} dot={false} />
-                                    <Line type="monotone" dataKey="actual_available" name="Actual" stroke="#10B981" strokeWidth={2} dot={false} />
-                                    <Line type="monotone" dataKey="buffer" name="Buffer" stroke="#F59E0B" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="total_required" name="Required" stroke="#3B82F6" strokeWidth={2} dot={false} connectNulls={true} />
+                                    <Line type="monotone" dataKey="actual_available" name="Actual" stroke="#10B981" strokeWidth={2} dot={false} connectNulls={true} />
+                                    <Line type="monotone" dataKey="buffer" name="Buffer" stroke="#F59E0B" strokeWidth={2} dot={false} connectNulls={true} />
+                                    <Line type="monotone" dataKey="dummy" stroke="transparent" strokeWidth={0} dot={false} activeDot={false} legendType="none" />
                                 </LineChart>
                             </ResponsiveContainer>
                         ) : <NoDataDisplay />}
@@ -159,8 +212,9 @@ const Dashboard = () => {
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                                     <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="#94A3B8" />
                                     <YAxis tick={{ fontSize: 10 }} stroke="#94A3B8" />
-                                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }} />
-                                    <Area type="monotone" dataKey="rate" name="Absenteeism %" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.1} strokeWidth={2} />
+                                    <RechartsTooltip content={<AbsenteeismTooltip externalData={metrics.absenteeismTrend} />} />
+                                    <Area type="monotone" dataKey="rate" name="Absenteeism %" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.1} strokeWidth={2} connectNulls={true} />
+                                    <Area type="monotone" dataKey="dummy" stroke="transparent" fill="transparent" legendType="none" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         ) : <NoDataDisplay />}
@@ -193,8 +247,9 @@ const Dashboard = () => {
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                                     <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="#94A3B8" />
                                     <YAxis tick={{ fontSize: 10 }} stroke="#94A3B8" />
-                                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }} />
+                                    <RechartsTooltip content={<DojoTooltip externalData={metrics.dojoTrend} />} />
                                     <Bar dataKey="count" name="Available Dojo Manpower" fill="#F59E0B" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                                    <Bar dataKey="dummy" fill="transparent" legendType="none" />
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : <NoDataDisplay />}
