@@ -32,7 +32,7 @@ const UPLOAD_CONFIGS = [
         title: 'Employee Map',
         icon: <Users className="text-purple-500" size={24} />,
         endpoint: '/upload/employee-map',
-        format: 'S. No | Employee ID | Employee Name | Employee Code | Gender | Line Name | Section Name | Department Name | Shift | Skill | Active/Left | Category | Date of Joining | Date of Leaving | isDojo',
+        format: 'S. No | Employee ID | Employee Name | Employee Code | Gender | Line Name (Optional) | [Line Name 2...20] (Optional) | Section Name | Department Name | Shift | Skill | Active/Left | Category | Date of Joining | Date of Leaving | isDojo',
         desc: 'Upload employee master roster. Auto-links line, section, and department IDs using matched names.'
     }
 ];
