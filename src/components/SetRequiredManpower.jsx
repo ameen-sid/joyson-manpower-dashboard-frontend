@@ -5,12 +5,11 @@ import { useFilters } from '../context/FilterContext';
 
 const SetRequiredManpower = ({ onClose, onSuccess }) => {
 
-    const { selectedDept, selectedSection, selectedLine, selectedShift, endDate, departments, allSections, allLines, shifts } = useFilters();
+    const { selectedDept, selectedSection, selectedLine, endDate, departments, allSections, allLines } = useFilters();
     const [date, setDate] = useState(endDate || new Date().toISOString().split('T')[0]);
     const [dept, setDept] = useState(selectedDept || '');
     const [section, setSection] = useState(selectedSection || '');
     const [line, setLine] = useState(selectedLine || '');
-    const [shift, setShift] = useState(selectedShift || '');
 
     const handleDeptChange = (val) => {
         setDept(val);
@@ -67,7 +66,7 @@ const SetRequiredManpower = ({ onClose, onSuccess }) => {
                 department: dept,
                 section: section,
                 line: line,
-                shift: shift,
+                shift: null,
                 req_l0: levels.l0,
                 req_l1: levels.l1,
                 req_l2: levels.l2,
@@ -103,7 +102,7 @@ const SetRequiredManpower = ({ onClose, onSuccess }) => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">Department</label>
                         <select value={dept} onChange={(e) => handleDeptChange(e.target.value)} className="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm bg-white">
@@ -123,13 +122,6 @@ const SetRequiredManpower = ({ onClose, onSuccess }) => {
                         <select disabled={!section} value={line} onChange={(e) => setLine(e.target.value)} className="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm bg-white disabled:bg-slate-100 disabled:cursor-not-allowed">
                             <option value="">All</option>
                             {modalLines?.map(l => <option key={l} value={l}>{l}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Shift</label>
-                        <select value={shift} onChange={(e) => setShift(e.target.value)} className="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm bg-white">
-                            <option value="">All</option>
-                            {shifts?.map(sf => <option key={sf} value={sf}>{sf}</option>)}
                         </select>
                     </div>
                 </div>

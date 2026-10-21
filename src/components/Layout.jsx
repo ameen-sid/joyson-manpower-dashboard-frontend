@@ -28,10 +28,9 @@ const LayoutContent = () => {
         selectedDept, setSelectedDept,
         selectedSection, setSelectedSection,
         selectedLine, setSelectedLine,
-        selectedShift, setSelectedShift,
         startDate, setStartDate,
         endDate, setEndDate,
-        departments, sections, lines, shifts,
+        departments, sections, lines,
         clearFilters
     } = useFilters();
 
@@ -72,7 +71,6 @@ const LayoutContent = () => {
                         <SelectInput value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} options={departments} placeholder="Department" />
                         <SelectInput value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)} options={sections} placeholder="Section" disabled={!selectedDept} />
                         <SelectInput value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} options={lines} placeholder="Line" disabled={!selectedSection} />
-                        <SelectInput value={selectedShift} onChange={(e) => setSelectedShift(e.target.value)} options={shifts} placeholder="Shift" />
                         <div className="flex items-center space-x-1 ml-1.5 shrink-0">
                             <DateInput value={startDate} onChange={(e) => setStartDate(e.target.value)} label="From" />
                             <span className="text-slate-400 font-medium text-xs">to</span>
@@ -116,7 +114,6 @@ const LayoutContent = () => {
                     <SelectInput value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} options={departments} placeholder="Dept" className="relative w-28 shrink-0" />
                     <SelectInput value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)} options={sections} placeholder="Sect" className="relative w-28 shrink-0" disabled={!selectedDept} />
                     <SelectInput value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} options={lines} placeholder="Line" className="relative w-28 shrink-0" disabled={!selectedSection} />
-                    <SelectInput value={selectedShift} onChange={(e) => setSelectedShift(e.target.value)} options={shifts} placeholder="Shift" className="relative w-24 shrink-0" />
                     <div className="flex items-center space-x-1 shrink-0">
                         <DateInput value={startDate} onChange={(e) => setStartDate(e.target.value)} label="From" />
                         <span className="text-slate-400 font-medium text-xs px-1.5">to</span>

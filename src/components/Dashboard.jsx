@@ -26,8 +26,8 @@ const CustomTooltip = ({ active, payload, label, externalData }) => {
                 <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-100 text-xs font-semibold">
                     <p className="text-slate-500 mb-1.5">{label}</p>
                     <p className="text-emerald-600">Actual: {actual !== null ? actual : 'Weekly Off'}</p>
-                    <p className="text-amber-500">Buffer: {buffer !== null ? buffer : 'Weekly Off'}</p>
-                    <p className="text-blue-600">Required: {required !== null ? required : 'Weekly Off'}</p>
+                    <p className="text-amber-500">Buffer: {required !== null ? (actual !== null ? (buffer !== null ? Math.max(0, buffer) : 0) : 'Weekly Off') : 'Not Specified'}</p>
+                    <p className="text-blue-600">Required: {required !== null ? required : 'Not Specified'}</p>
                 </div>
             );
         }
@@ -40,10 +40,16 @@ const AbsenteeismTooltip = ({ active, payload, label, externalData }) => {
         const record = externalData?.find(d => d.date === label);
         if (record) {
             const rate = record.rate;
+            let displayVal = 'Weekly Off';
+            if (rate !== null) {
+                displayVal = `${rate}%`;
+            } else if (record.notSpecified) {
+                displayVal = 'Not Specified';
+            }
             return (
                 <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-100 text-xs font-semibold">
                     <p className="text-slate-500 mb-1.5">{label}</p>
-                    <p className="text-purple-600">Absenteeism %: {rate !== null ? `${rate}%` : 'Weekly Off'}</p>
+                    <p className="text-purple-600">Absenteeism %: {displayVal}</p>
                 </div>
             );
         }
@@ -69,7 +75,7 @@ const DojoTooltip = ({ active, payload, label, externalData }) => {
 
 const Dashboard = () => {
 
-    const { selectedDept, selectedSection, selectedLine, selectedShift, startDate, endDate } = useFilters();
+    const { selectedDept, selectedSection, selectedLine, startDate, endDate } = useFilters();
     const [isSetRequiredModalOpen, setIsSetRequiredModalOpen] = React.useState(false);
 
     const [metrics, setMetrics] = React.useState({
@@ -89,7 +95,6 @@ const Dashboard = () => {
                     department: selectedDept,
                     section: selectedSection,
                     line: selectedLine,
-                    shift: selectedShift,
                     startDate,
                     endDate
                 };
@@ -139,7 +144,7 @@ const Dashboard = () => {
 
         const interval = setInterval(fetchData, 30000);
         return () => clearInterval(interval);
-    }, [selectedDept, selectedSection, selectedLine, selectedShift, startDate, endDate]);
+    }, [selectedDept, selectedSection, selectedLine, startDate, endDate]);
 
     return (
         <div className="h-[calc(100vh-170px)] grid grid-rows-2 gap-3 animate-in fade-in duration-500 overflow-hidden relative">
